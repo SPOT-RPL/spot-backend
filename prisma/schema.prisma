@@ -1,0 +1,218 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StatusPengguna {
+  Aktif
+  TidakAktif @map("Tidak Aktif")
+}
+
+enum Role {
+  Admin
+  Mahasiswa
+  Dosen
+}
+
+
+model Pengguna {
+  UUID          String @id @default(uuid()) @db.Char(36)
+  email         String @unique @db.VarChar(255)
+  password      String @db.VarChar(255)
+  nama_lengkap  String @db.VarChar(255)
+  status        StatusPengguna @default(Aktif)
+  timeStamp     DateTime @default(now())
+  role          Role
+
+  admin         Admin?
+  mahasiswa     Mahasiswa?
+  dosen         Dosen?
+
+  aktivitas Aktivitas[]
+}
+
+model Admin {
+  id_admin      String @id @db.Char(10)
+  UUID          String @unique @db.Char(36)
+
+  pengguna Pengguna @relation(fields: [UUID], references: [UUID])
+}
+
+model Mahasiswa {
+   npm          String @id @db.Char(10)
+   UUID         String @unique @db.Char(36)
+
+   pengguna Pengguna @relation(fields: [UUID], references: [UUID])
+
+   anggotaKelompok AnggotaKelompok[]
+   pengambilanMatakuliah PengambilanMatakuliah[]
+}
+
+model Dosen {
+  nidn          String @id @db.Char(10)
+  UUID          String @unique @db.Char(36)
+
+  pengguna Pengguna @relation(fields: [UUID], references: [UUID])
+  kelas Kelas[]
+}
+
+
+model Aktivitas {
+  id_aktivitas  Int @id @default(autoincrement())
+  userId        String @db.Char(36)
+  jenis_aktivitas String @db.VarChar(255)
+  detail        String @db.VarChar(255)
+  waktu         DateTime @default(now())
+
+  pengguna Pengguna @relation(fields: [userId], references: [UUID])
+}
+
+model Matakuliah {
+  kode_mk       String @id @db.VarChar(255)
+  nama_mk       String @db.VarChar(255)
+  timestamp     DateTime @default(now())
+
+  kelas Kelas[]
+  pengambilanMatakuliah PengambilanMatakuliah[]
+  jadwalUjian jadwalUjian[]
+}
+
+model Kelas {
+  id_kelas      Int @id @default(autoincrement())
+  kode_mk       String @db.VarChar(255)
+  nidn          String @db.Char(10)
+  nama_kelas    String 
+  timestamp     DateTime @default(now())
+
+  matakuliah Matakuliah @relation(fields: [kode_mk], references: [kode_mk])
+  dosen Dosen @relation(fields: [nidn], references: [nidn])
+
+  tubes TugasBesar[]
+  jadwalKuliah jadwalKuliah[]
+}
+
+// ini status tugas besar isinya apa, dan jadi ato kaga
+enum statusTugasBesar{
+  Pendaftaran
+  Penjadwalan
+  Presentasi
+  Selesai
+}
+
+model TugasBesar {
+  id_tubes      Int @id @default(autoincrement())
+  id_kelas      Int 
+  deskripsi     String @db.VarChar(255)
+  jumlah_kel    Int 
+  maksimal_kel  Int 
+  pendaftaran_mulai   DateTime 
+  pendaftaran_akhir   DateTime
+  statusPendaftaran   statusTugasBesar
+
+  kelas Kelas @relation(fields: [id_kelas], references: [id_kelas])
+
+  kelompok Kelompok[]
+}
+
+model Ruangan {
+  id_ruangan    Int @id @default(autoincrement())
+  nama_ruangan  String @db.VarChar(255)
+
+  jadwalPresentasi jadwalPresentasi[]
+  jadwalKuliah jadwalKuliah[]
+  jadwalUjian jadwalUjian[]
+}
+
+enum statusKelompok {
+  Terbuka
+  Kurang
+  Penuh
+}
+
+model Kelompok {
+  id_kelompok   Int @id @default(autoincrement())
+  id_tubes      Int
+  statusKelompok statusKelompok
+  timestamp     DateTime
+
+  tugasBesar TugasBesar @relation(fields: [id_tubes], references: [id_tubes])
+
+  jadwalPresentasi jadwalPresentasi[]
+  anggotaKelompok AnggotaKelompok[]
+}
+
+model jadwalPresentasi {
+  id_jadwal     Int @id @default(autoincrement())
+  id_ruangan    Int 
+  id_kelompok   Int 
+  tanggal       DateTime @db.Date
+  jam_mulai     DateTime @db.Time(0)
+  jam_selesai   DateTime @db.Time(0)
+  timestamp     DateTime @default(now())
+
+  ruangan Ruangan @relation(fields: [id_ruangan], references: [id_ruangan])
+  kelompok Kelompok @relation(fields: [id_kelompok], references: [id_kelompok])
+}
+
+model AnggotaKelompok {
+  id_kelompok   Int 
+  npm_mahasiswa String @db.Char(10)
+
+  kelompok Kelompok @relation(fields: [id_kelompok], references: [id_kelompok])
+  mahasiswa Mahasiswa @relation(fields: [npm_mahasiswa], references: [npm])
+
+  @@id([id_kelompok,npm_mahasiswa])
+}
+
+model PengambilanMatakuliah {
+  npm_mahasiswa String @db.Char(10)
+  kode_mk       String @db.VarChar(255)
+
+  mahasiswa Mahasiswa @relation(fields: [npm_mahasiswa], references: [npm])
+  matakuliah Matakuliah @relation(fields: [kode_mk], references: [kode_mk])
+
+  @@id([npm_mahasiswa, kode_mk])
+}
+
+enum Hari {
+  Senin
+  Selasa
+  Rabu
+  Kamis
+  Jumat
+}
+
+model jadwalKuliah {
+  id_jadwalKuliah Int @id @default(autoincrement())
+  id_kelas        Int 
+  id_ruangan      Int 
+  hari            Hari
+  jam_mulai       DateTime @db.Time(0)
+  jam_akhir       DateTime @db.Time(0)
+  timestamp       DateTime @default(now())
+
+  kelas Kelas @relation(fields: [id_kelas], references: [id_kelas])
+  ruangan Ruangan @relation(fields: [id_ruangan], references: [id_ruangan])
+}
+
+model jadwalUjian {
+  id_jadwalUjian  Int @id @default(autoincrement())
+  kode_mk         String @db.VarChar(255)
+  id_ruangan      Int 
+  tanggal         DateTime @db.Date
+  jam_mulai       DateTime @db.Time(0)
+  jam_selesai     DateTime @db.Time(0)
+  timestamp       DateTime @default(now())
+
+  matakuliah Matakuliah @relation(fields: [kode_mk], references: [kode_mk])
+  ruangan Ruangan @relation(fields: [id_ruangan], references: [id_ruangan])
+}
