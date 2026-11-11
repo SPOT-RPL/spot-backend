@@ -1,15 +1,42 @@
 {
-		"type": "module",
-		"dependencies": {
-				"express": "^5.3.0"
-		},
-		"devDependencies": {
-				"@types/bun": "^1.4.4",
-				"@types/express": "^5.0.6",
-				"@types/node": "^26.6.6",
-				"typescript": "^7.0.2"
-		},
-		"scripts": {
-				"dev": "bun --hot run src/server.ts"
-		}
+  "name": "spot-backend",
+  "version": "1.0.0",
+  "description": "The backend to the SPOT system",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "start": "bun src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "prisma:validate": "prisma validate --config ./prisma7.config.ts",
+    "prisma:generate": "prisma generate --config ./prisma7.config.ts",
+    "prisma:migrate": "prisma migrate dev --config ./prisma7.config.ts",
+    "prisma:studio": "prisma studio --config ./prisma7.config.ts",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SPOT-RPL/spot-backend.git"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "prisma": "^7.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "bugs": {
+    "url": "https://github.com/SPOT-RPL/spot-backend/issues"
+  },
+  "homepage": "https://github.com/SPOT-RPL/spot-backend#readme"
 }
