@@ -11,7 +11,9 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noEmit": true,
-
+    "rewriteRelativeImportExtensions": true,
+		"erasableSyntaxOnly": true,
+      
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
