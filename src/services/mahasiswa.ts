@@ -1,20 +1,23 @@
-import { json } from "node:stream/consumers";
 import prisma from "../lib/prisma.ts";
 
-
-////////////////////////////////////////////////halaman memilih mata kuliah///////////////////////////////////////
 export async function getAllMataKuliah() {
-    const data = await prisma.matakuliah.findMany({
+    return await prisma.matakuliah.findMany({
         include: {
             kelas: {}
         }
     });
+}
 
-    return data;
+export async function getMahasiswa(userUUID: string) {
+	return await prisma.mahasiswa.findUnique({
+		where: {
+			UUID: userUUID
+		}
+	})
 }
 
 export async function getMatakuliahYangDiambil(npm: string) {
-    const data = await prisma.pengambilanMatakuliah.findMany({
+    return await prisma.pengambilanMatakuliah.findMany({
         where: {
             npm_mahasiswa: npm
         },
@@ -26,21 +29,17 @@ export async function getMatakuliahYangDiambil(npm: string) {
             }
         }
     })
-    return data;
 }
 
 export async function simpanMatakuliah(npm: string, idKelas: number[]) {
-    const data = await prisma.pengambilanMatakuliah.createMany({
+    return await prisma.pengambilanMatakuliah.createMany({
         data: idKelas.map(id => ({
             npm_mahasiswa: npm,
             id_kelas: id
         })),
         skipDuplicates: true
     });
-
-    return data;
 }
-
 
 export async function getKelasMatakuliah(namaMatakuliah: string) {
     const data = await prisma.kelas.findMany({
@@ -55,8 +54,6 @@ export async function getKelasMatakuliah(namaMatakuliah: string) {
     return data;
 }
 
-
-////////////////////////////////////////////////halaman trigger daftar kelompok///////////////////////////////////////
 export async function getKelompok(namaMatakuliah: string, namaKelas: string) {
     const data = await prisma.kelompok.findMany({
         where: {
@@ -137,7 +134,6 @@ export async function gabungKelompok (npm : string, idKelompok : number){
     });
 }
 
-////////////////////////////////////////////////halaman jadwal///////////////////////////////////////
 export async function getJadwalMatakuliahMahasiswa(npm: string) {
     const data = await prisma.pengambilanMatakuliah.findMany({
         where: {
@@ -168,7 +164,6 @@ export async function getJadwalMatakuliahMahasiswa(npm: string) {
     return data;
 }
 
-////////////////////////////////////////////////halaman jadwal ujian///////////////////////////////////////
 export async function getJadwalUjianMahasiswa(npm: string) {
     console.log("Testing")
     const data = await prisma.jadwalUjian.findMany({
@@ -208,7 +203,6 @@ export async function getJadwalUjianMahasiswa(npm: string) {
     return data;
 }
 
-/////////////////////////////////////////////////halaman tubes mahasiswa///////////////////////////////////////
 export async function getAllTubesMatakuliah(npm: string) {
     const data = await prisma.tugasBesar.findMany({
         where: {
@@ -238,4 +232,50 @@ export async function getAllTubesMatakuliah(npm: string) {
     });
 
     return data;
+}
+
+export async function getClassSchedule(npm: string) {
+	return await prisma.pengambilanMatakuliah.findMany({
+		where: {
+			npm_mahasiswa: npm
+		},
+		select: {
+			kelas: {
+				select: {
+					matakuliah: true,
+					nama_kelas: true,
+					dosen: {
+						select: {
+							pengguna: {
+								select: {
+									nama_lengkap: true
+								}
+							}
+						}
+					},
+					jadwalKuliah: true
+				}
+			}
+		}
+	})
+}
+
+export async function getExamSchedule(npm: string) {
+	return await prisma.pengambilanMatakuliah.findMany({
+		where: {
+			npm_mahasiswa: npm
+		},
+		select: {
+			kelas: {
+				select: {
+					matakuliah: {
+						select: {
+							nama_mk: true,
+							jadwalUjian: true
+						}
+					}
+				}
+			}
+		}
+	})
 }
