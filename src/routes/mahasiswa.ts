@@ -1,55 +1,65 @@
 import express, { type Request, type Response } from "express";
-import { gabungKelompok, getAllMataKuliah, getAllTubesMatakuliah, getAnggotaKelompok, getJadwalMatakuliahMahasiswa, getJadwalUjianMahasiswa, getKelasMatakuliah, getKelompok, getMatakuliahYangDiambil, simpanMatakuliah } from "../services/mahasiswa";
+import { getAllCourses, getClassSchedule, getExamSchedule, getProjects, getTakenCourses, joinGroup, takeCourse } from "../services/mahasiswa";
+import { protect } from "../middleware/protect"
+import { requireStudent } from "../middleware/requireStudent";
 
 const router = express.Router();
 
-router.get("/matakuliah", async (_req: Request, res: Response) => {
-    res.json(await getAllMataKuliah());
+router.get("/courses", protect, requireStudent, async (req: Request, res: Response) => {
+	const taken = (req.query.taken === "true");
+
+	try {
+		if (taken) {
+			res.status(200).json(await getAllCourses());
+		} else {
+			res.status(200).json(await getTakenCourses(req.student!.npm));
+		}
+	} catch {
+		res.status(500).json({ message: "Internal server error" });
+	}
 });
 
-router.get("/matakuliahDiambil", async (req: Request, res: Response) => {
-    const npm = req.query.npm as string;
-    res.json(await getMatakuliahYangDiambil(npm));
+router.get("/class-schedules", protect, requireStudent, async (req: Request, res: Response) => {
+	try {
+		return res.status(200).json(getClassSchedule(req.student!.npm));
+	} catch {
+		return res.status(500).json({ message: "Internal server error" });
+	}
 });
 
-router.get("/kelasMatakuliah", async (req: Request, res: Response) => {
-    const kodeMk = req.query.kode_mk as string;
-    res.json(await getKelasMatakuliah(kodeMk));
+router.get("/exam-schedules", protect, requireStudent, async (req: Request, res: Response) => {
+	try {
+		return res.status(200).json(getExamSchedule(req.student!.npm));
+	} catch {
+		return res.status(500).json({ message: "Internal server error" });
+	}
+})
+
+router.get("/projects", protect, requireStudent, async (req: Request, res: Response) => {
+	try {
+		return res.status(200).json(getProjects(req.student!.npm));
+	} catch {
+		return res.status(500).json({ message: "Internal server error" });
+	}
 });
 
-router.post("/simpanMatakuliah", async (req: Request, res: Response) => {
-    const { npm, idKelas } = req.body;
-    res.json(await simpanMatakuliah(npm, idKelas));
+router.post("/group/:groupId", protect, requireStudent, async (req: Request, res: Response) => {
+	try {
+		await joinGroup(req.student!.npm, Number(req.params.groupId));
+		return res.sendStatus(201);
+	} catch {
+		return res.status(500).json({ message: "Internal server error" });
+	}
 });
 
-router.get("/kelompok", async (req: Request, res: Response) => {
-    const { namaMatakuliah, namaKelas } = req.query;
-    res.json(await getKelompok(namaMatakuliah as string, namaKelas as string));
-});
+router.post("/course-taken", protect, requireStudent, async (req: Request, res: Response) => {
+	try {
+		const { classIds } = req.body;
 
-router.get("/anggotaKelompok", async (req: Request, res: Response) => {
-    const idKelompok = Number(req.query.idKelompok);
-    res.json(await getAnggotaKelompok(idKelompok));
-});
-
-router.post("/gabungKelompok", async (req: Request, res: Response) => {
-    const { npm, idKelompok } = req.body;
-    res.json(await gabungKelompok(npm, idKelompok));
-});
-
-router.get("/jadwalKuliah", async (req: Request, res: Response) => {
-    const npm = req.query.npm as string;
-    res.json(await getJadwalMatakuliahMahasiswa(npm));
-});
-
-router.get("/jadwalUjian", async (req: Request, res: Response) => {
-    const npm = req.query.npm as string;
-    res.json(await getJadwalUjianMahasiswa(npm));
-});
-
-router.get("/tugasBesar", async (req: Request, res: Response) => {
-    const npm = req.query.npm as string;
-    res.json(await getAllTubesMatakuliah(npm));
+		res.status(201).json(await takeCourse(req.student!.npm, classIds));
+	} catch {
+		res.status(500).json({ message: "Internal server error" })
+	}
 });
 
 
