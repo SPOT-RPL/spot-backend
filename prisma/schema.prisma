@@ -38,6 +38,7 @@ model Pengguna {
   dosen         Dosen?
 
   aktivitas Aktivitas[]
+  refreshTokens RefreshToken[]
 }
 
 model Admin {
@@ -215,4 +216,15 @@ model jadwalUjian {
 
   matakuliah Matakuliah @relation(fields: [kode_mk], references: [kode_mk])
   ruangan Ruangan @relation(fields: [id_ruangan], references: [id_ruangan])
+}
+
+model RefreshToken {
+  id String @id @default(uuid())
+  userUUID String @db.Char(36)
+  tokenHash String @unique
+  expiresAt DateTime
+
+  pengguna Pengguna @relation(fields: [userUUID], references: [UUID], onDelete: Cascade)
+
+  @@index([userUUID])
 }
