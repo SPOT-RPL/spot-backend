@@ -82,7 +82,6 @@ model Matakuliah {
   timestamp     DateTime @default(now())
 
   kelas Kelas[]
-  pengambilanMatakuliah PengambilanMatakuliah[]
   jadwalUjian jadwalUjian[]
 }
 
@@ -98,6 +97,7 @@ model Kelas {
 
   tubes TugasBesar[]
   jadwalKuliah jadwalKuliah[]
+  pengambilanMatakuliah PengambilanMatakuliah[]
 }
 
 // ini status tugas besar isinya apa, dan jadi ato kaga
@@ -175,12 +175,12 @@ model AnggotaKelompok {
 
 model PengambilanMatakuliah {
   npm_mahasiswa String @db.Char(10)
-  kode_mk       String @db.VarChar(255)
+  id_kelas       Int
 
   mahasiswa Mahasiswa @relation(fields: [npm_mahasiswa], references: [npm])
-  matakuliah Matakuliah @relation(fields: [kode_mk], references: [kode_mk])
+  kelas     Kelas     @relation(fields: [id_kelas], references: [id_kelas])
 
-  @@id([npm_mahasiswa, kode_mk])
+  @@id([npm_mahasiswa, id_kelas])
 }
 
 enum Hari {
