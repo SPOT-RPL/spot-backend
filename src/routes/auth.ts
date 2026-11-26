@@ -20,7 +20,7 @@ router.post("/login", async (req: Request, res: Response) => {
 	const accessToken = await generateAccessToken(user.UUID);
 	const refreshToken = await generateRefreshToken(user.UUID);
 
-	if (!registerRefreshToken(refreshToken)) {
+	if (!await registerRefreshToken(refreshToken)) {
 		return res.status(500).json({
 			message: "Failed to store refresh token"
 		});

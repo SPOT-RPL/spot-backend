@@ -4,8 +4,8 @@ import { verifyAccessToken } from "../lib/jwt";
 export const protect: RequestHandler = async (req, res, next) => {
 	try {
 		const authHeader = req.headers.authorization;
-		if (!authHeader?.startsWith('Bearer ')) {
-			return res.status(401).json({ error: 'Not authorized' });
+		if (!authHeader?.startsWith("Bearer ")) {
+			return res.status(401).json({ error: "Not authorized" });
 		}
 
 		const accessToken = authHeader.slice(7).trim();
@@ -22,6 +22,6 @@ export const protect: RequestHandler = async (req, res, next) => {
 
 		next();
 	} catch (error) {
-		res.status(401).json({ error: 'Not authorized' });
+		res.status(401).json({ error: "Not authorized" });
 	}
 };
