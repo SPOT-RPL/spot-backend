@@ -208,9 +208,9 @@ export async function getAllTubesMatakuliah(npm: string) {
         where: {
             kelas : {
                 pengambilanMatakuliah : {
-                    some : {
-                        npm_mahasiswa : npm
-                    }
+					some: {
+						npm_mahasiswa: npm
+					}
                 }
             }
         }, include : {
@@ -272,6 +272,34 @@ export async function getExamSchedule(npm: string) {
 						select: {
 							nama_mk: true,
 							jadwalUjian: true
+						}
+					}
+				}
+			}
+		}
+	})
+}
+
+export async function getProjects(npm: string) {
+	return await prisma.tugasBesar.findMany({
+		where: {
+			kelas: {
+				pengambilanMatakuliah: {
+					some: {
+						npm_mahasiswa: npm
+					}
+				}
+			}
+		},
+		select: {
+			deskripsi: true,
+			kelas: {
+				select: {
+					dosen: {
+						select: {
+							pengguna: {
+								
+							}
 						}
 					}
 				}
