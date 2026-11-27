@@ -1,7 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
+ // This is your Prisma schema file,
+ // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+ // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client"
@@ -19,8 +20,8 @@ enum StatusPengguna {
 
 enum Role {
   Admin
-  Mahasiswa
-  Dosen
+  Lecturer
+  Student
 }
 
 
@@ -34,8 +35,8 @@ model Pengguna {
   role          Role
 
   admin         Admin?
-  mahasiswa     Mahasiswa?
-  dosen         Dosen?
+  mahasiswa     Student?
+  dosen         Lecturer?
 
   aktivitas Aktivitas[]
   refreshTokens RefreshToken[]
@@ -48,7 +49,7 @@ model Admin {
   pengguna Pengguna @relation(fields: [UUID], references: [UUID])
 }
 
-model Mahasiswa {
+model Student {
    npm          String @id @db.Char(10)
    UUID         String @unique @db.Char(36)
 
@@ -56,14 +57,16 @@ model Mahasiswa {
 
    anggotaKelompok AnggotaKelompok[]
    pengambilanMatakuliah PengambilanMatakuliah[]
+	@@map("Mahasiswa")
 }
 
-model Dosen {
+model Lecturer {
   nidn          String @id @db.Char(10)
   UUID          String @unique @db.Char(36)
 
   pengguna Pengguna @relation(fields: [UUID], references: [UUID])
   kelas Kelas[]
+	@@map("Dosen")
 }
 
 
@@ -90,11 +93,11 @@ model Kelas {
   id_kelas      Int @id @default(autoincrement())
   kode_mk       String @db.VarChar(255)
   nidn          String @db.Char(10)
-  nama_kelas    String 
+  nama_kelas    String
   timestamp     DateTime @default(now())
 
   matakuliah Matakuliah @relation(fields: [kode_mk], references: [kode_mk])
-  dosen Dosen @relation(fields: [nidn], references: [nidn])
+  dosen Lecturer @relation(fields: [nidn], references: [nidn])
 
   tubes TugasBesar[]
   jadwalKuliah jadwalKuliah[]
@@ -111,11 +114,11 @@ enum statusTugasBesar{
 
 model TugasBesar {
   id_tubes      Int @id @default(autoincrement())
-  id_kelas      Int 
+  id_kelas      Int
   deskripsi     String @db.VarChar(255)
-  jumlah_kel    Int 
-  maksimal_kel  Int 
-  pendaftaran_mulai   DateTime 
+  jumlah_kel    Int
+  maksimal_kel  Int
+  pendaftaran_mulai   DateTime
   pendaftaran_akhir   DateTime
   statusPendaftaran   statusTugasBesar
 
@@ -153,8 +156,8 @@ model Kelompok {
 
 model jadwalPresentasi {
   id_jadwal     Int @id @default(autoincrement())
-  id_ruangan    Int 
-  id_kelompok   Int 
+  id_ruangan    Int
+  id_kelompok   Int
   tanggal       DateTime @db.Date
   jam_mulai     DateTime @db.Time(0)
   jam_selesai   DateTime @db.Time(0)
@@ -165,11 +168,11 @@ model jadwalPresentasi {
 }
 
 model AnggotaKelompok {
-  id_kelompok   Int 
+  id_kelompok   Int
   npm_mahasiswa String @db.Char(10)
 
   kelompok Kelompok @relation(fields: [id_kelompok], references: [id_kelompok])
-  mahasiswa Mahasiswa @relation(fields: [npm_mahasiswa], references: [npm])
+  mahasiswa Student @relation(fields: [npm_mahasiswa], references: [npm])
 
   @@id([id_kelompok,npm_mahasiswa])
 }
@@ -178,7 +181,7 @@ model PengambilanMatakuliah {
   npm_mahasiswa String @db.Char(10)
   id_kelas       Int
 
-  mahasiswa Mahasiswa @relation(fields: [npm_mahasiswa], references: [npm])
+  mahasiswa Student @relation(fields: [npm_mahasiswa], references: [npm])
   kelas     Kelas     @relation(fields: [id_kelas], references: [id_kelas])
 
   @@id([npm_mahasiswa, id_kelas])
@@ -194,8 +197,8 @@ enum Hari {
 
 model jadwalKuliah {
   id_jadwalKuliah Int @id @default(autoincrement())
-  id_kelas        Int 
-  id_ruangan      Int 
+  id_kelas        Int
+  id_ruangan      Int
   hari            Hari
   jam_mulai       DateTime @db.Time(0)
   jam_akhir       DateTime @db.Time(0)
@@ -208,7 +211,7 @@ model jadwalKuliah {
 model jadwalUjian {
   id_jadwalUjian  Int @id @default(autoincrement())
   kode_mk         String @db.VarChar(255)
-  id_ruangan      Int 
+  id_ruangan      Int
   tanggal         DateTime @db.Date
   jam_mulai       DateTime @db.Time(0)
   jam_selesai     DateTime @db.Time(0)
