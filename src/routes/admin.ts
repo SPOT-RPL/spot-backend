@@ -3,7 +3,7 @@ import express, { type Request, type Response } from "express";
 import { getStatistikAdmin, getAktivitasTerakhir, getJadwalPresentasi, getAllAkunMahasiswa, tambahMahasiswa, editMahasiswa, getAllAkunDosen, tambahDosen, editDosen, gantiDosenPengampu, tambahMatakuliah, editMatakuliah, getAllAktivitasPengguna, cekMahasiswa, detailMahasiswa, detailDosen, cekDosen, detailMatakuliah } from "../services/admin";
 import { protect } from "../middleware/protect"
 import prisma from "../lib/prisma";
-import { getAllMataKuliah } from "../services/mahasiswa";
+import { getAllCourses } from "../services/mahasiswa";
 
 const router = express.Router();
 
@@ -189,7 +189,7 @@ router.put("/gantiDosenPengampu", protect, async (req: Request, res: Response) =
 //halaman manajemen matakuliah
 router.get("/courses", protect, async (req: Request, res: Response) => {
     try {
-        return res.status(200).json(await getAllMataKuliah());
+        return res.status(200).json(await getAllCourses);
     } catch {
         return res.status(500).json({ message: "Internal server error" })
     }
