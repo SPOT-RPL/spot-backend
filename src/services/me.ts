@@ -5,12 +5,12 @@ export async function getUser(userUUID: string) {
 }
 
 export async function getUserRole(userUUID: string) {
-	const student = await prisma.mahasiswa.findUnique({ where: { UUID: userUUID }});
+	const student = await prisma.student.findUnique({ where: { UUID: userUUID }});
 	if (student) {
 		return student;
 	}
 
-	const lecturer = await prisma.dosen.findUnique({ where: { UUID: userUUID }});
+	const lecturer = await prisma.lecturer.findUnique({ where: { UUID: userUUID }});
 	if (lecturer) {
 		return lecturer;
 	}

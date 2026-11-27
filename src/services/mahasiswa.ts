@@ -28,7 +28,7 @@ export async function getTakenCourses(npm: string) {
 }
 
 export async function getStudent(userUUID: string) {
-	return await prisma.mahasiswa.findUnique({
+	return await prisma.student.findUnique({
 		where: {
 			UUID: userUUID
 		}
