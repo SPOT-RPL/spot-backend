@@ -10,9 +10,9 @@ export async function getUserRole(userUUID: string) {
 		return student;
 	}
 
-	const teacher = await prisma.dosen.findUnique({ where: { UUID: userUUID }});
-	if (teacher) {
-		return teacher;
+	const lecturer = await prisma.dosen.findUnique({ where: { UUID: userUUID }});
+	if (lecturer) {
+		return lecturer;
 	}
 
 	const admin = await prisma.admin.findUnique({ where: { UUID: userUUID }});

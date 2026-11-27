@@ -24,7 +24,7 @@ router.get("/", protect, async (req: Request, res: Response) => {
 	}
 	if ("nidn" in role) {
 		roleObj = {
-			role: "teacher",
+			role: "lecturer",
 			nidn: role.nidn
 		}
 	}
