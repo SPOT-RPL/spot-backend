@@ -13,6 +13,7 @@ app.use("/api/health", health);
 app.use("/api/auth", auth)
 app.use("/api/student", student);
 app.use("/api/admin", admin);
+app.use("/api/projects", projects);
 app.use("/api/me", me);
 
 app.use(errorHandler);
