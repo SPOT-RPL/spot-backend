@@ -31,6 +31,34 @@ router.post("/login", async (req: Request, res: Response) => {
 	});
 })
 
+router.post("/logout", protect, async (req: Request, res: Response) => {
+	const { refreshToken } = req.body;
+
+	try {
+		const payload = await verifyRefreshToken(refreshToken);
+		const userUUID = payload.sub;
+
+		const foundRefreshToken = await findActiveRefreshToken(refreshToken)
+		if (!foundRefreshToken || foundRefreshToken.userUUID !== userUUID) {
+			return res.status(401).json({
+				message: "Invalid or expired refresh token"
+			});
+		}
+
+		if (! await deleteRefreshToken(foundRefreshToken)) {
+			return res.status(500).json({
+				message: "Internal server error"
+			});
+		}
+
+		return res.sendStatus(200);
+	} catch {
+		return res.status(401).json({
+			message: "Invalid refresh token"
+		});
+	}
+})
+
 router.post("/refresh", async (req: Request, res: Response) => {
 	try {
 		const { refreshToken } = req.body;
