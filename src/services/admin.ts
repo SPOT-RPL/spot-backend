@@ -1,13 +1,14 @@
 import { password } from "bun";
 import prisma from "../lib/prisma.ts";
-import { randomBytes } from "node:crypto";
+import bcrypt from "bcrypt";
 import type { StatusPengguna } from "../../generated/prisma/enums.ts";
+import { randomBytes } from "node:crypto";
 
 ////////////////////////////////////////// dashboard //////////////////////////////////////////
 export async function getStatistikAdmin() {
     const data = {
-        jumlahDosen: await prisma.dosen.count(),
-        jumlahMahasiswa: await prisma.mahasiswa.count(),
+        jumlahDosen: await prisma.lecturer.count(),
+        jumlahMahasiswa: await prisma.student.count(),
         jumlahPresentasi: await prisma.jadwalPresentasi.count(),
         jumlahTugasBesar: await prisma.tugasBesar.count()
     };
@@ -79,7 +80,7 @@ export async function getJadwalPresentasi() {
 
 ////////////////////////////////////////// Manajemen Akun Siswa //////////////////////////////////////////
 export async function getAllAkunMahasiswa() {
-    const data = await prisma.mahasiswa.findMany({
+    const data = await prisma.student.findMany({
         select: {
             pengguna: {
                 select: {
@@ -98,14 +99,14 @@ export async function getAllAkunMahasiswa() {
 export async function tambahMahasiswa(nama_lengkap: string, npm: string, email: string) {
     const passwordAwal = randomBytes(12).toString("base64");
 
-    const hashedPassword = await Bun.password.hash(passwordAwal);
+    const hashedPassword = await bcrypt.hash(passwordAwal, 12);
 
     const data = await prisma.pengguna.create({
         data: {
             nama_lengkap: nama_lengkap,
             email: email,
-            password: await Bun.password.hash(hashedPassword),
-            role: "Mahasiswa",
+            password: hashedPassword,
+            role: "Student",
             mahasiswa: {
                 create: {
                     npm: npm
@@ -127,18 +128,29 @@ export async function tambahMahasiswa(nama_lengkap: string, npm: string, email: 
     return data;
 }
 
-export async function getMatakuliahYangDiambil(npm: string) {
-    const data = await prisma.pengambilanMatakuliah.findMany({
+export async function detailMahasiswa(npm: string) {
+    const data = await prisma.student.findUnique({
         where: {
-            npm_mahasiswa: npm
+            npm: npm
         }, select: {
-            id_kelas: true,
-            kelas: {
+            npm: true,
+            pengguna: {
                 select: {
-                    nama_kelas: true,
-                    matakuliah: {
+                    nama_lengkap: true,
+                    email: true,
+                    status: true
+                }
+            }, pengambilanMatakuliah: {
+                select: {
+                    id_kelas: true,
+                    kelas: {
                         select: {
-                            nama_mk: true,
+                            nama_kelas: true,
+                            matakuliah: {
+                                select: {
+                                    nama_mk: true
+                                }
+                            }
                         }
                     }
                 }
@@ -159,7 +171,7 @@ export async function editMahasiswa(nama_lengkap: string, npmBaru: string, npmLa
     })
 
 
-    const data = await prisma.mahasiswa.update({
+    const data = await prisma.student.update({
         where: {
             npm: npmLama,
         },
@@ -180,7 +192,7 @@ export async function editMahasiswa(nama_lengkap: string, npmBaru: string, npmLa
 
 ////////////////////////////////////////// Manajemen Akun Dosen //////////////////////////////////////////
 export async function getAllAkunDosen() {
-    const data = await prisma.dosen.findMany({
+    const data = await prisma.lecturer.findMany({
         select: {
             pengguna: {
                 select: {
@@ -199,14 +211,14 @@ export async function getAllAkunDosen() {
 export async function tambahDosen(nama_lengkap: string, nidn: string, email: string) {
     const passwordAwal = randomBytes(12).toString("base64");
 
-    const hashedPassword = await Bun.password.hash(passwordAwal);
+    const hashedPassword = await bcrypt.hash(passwordAwal, 12);
 
     const data = await prisma.pengguna.create({
         data: {
             nama_lengkap: nama_lengkap,
             email: email,
-            password: await Bun.password.hash(hashedPassword),
-            role: "Dosen",
+            password: hashedPassword,
+            role: "Lecturer",
             dosen: {
                 create: {
                     nidn: nidn
@@ -228,16 +240,27 @@ export async function tambahDosen(nama_lengkap: string, nidn: string, email: str
     return data;
 }
 
-export async function getMatakuliahYangDiajar(nidn: string) {
-    const data = await prisma.kelas.findMany({
+export async function detailDosen(nidn: string) {
+    const data = await prisma.lecturer.findUnique({
         where: {
             nidn: nidn
         }, select: {
-            id_kelas: true,
-            nama_kelas: true,
-            matakuliah: {
-                select: {
-                    nama_mk: true
+            nidn : true,
+            pengguna : {
+                select : {
+                    nama_lengkap : true,
+                    email : true, 
+                    status : true,
+                }
+            },
+            kelas : {
+                select : {
+                    nama_kelas : true,
+                    matakuliah : {
+                        select : {
+                            nama_mk : true
+                        }
+                    }
                 }
             }
         }
@@ -246,7 +269,7 @@ export async function getMatakuliahYangDiajar(nidn: string) {
 }
 
 export async function editDosen(nama_lengkap: string, nidnBaru: string, nidnLama: string, email: string, statusPengguna: StatusPengguna) {
-    const data = await prisma.dosen.update({
+    const data = await prisma.lecturer.update({
         where: {
             nidn: nidnLama
         }, data: {
@@ -264,7 +287,7 @@ export async function editDosen(nama_lengkap: string, nidnBaru: string, nidnLama
     return data;
 }
 
-export async function gantiDosenPengampu(idKelas: number,nidnDosenBaru: string) {
+export async function gantiDosenPengampu(idKelas: number, nidnDosenBaru: string) {
     return await prisma.kelas.update({
         where: {
             id_kelas: idKelas
@@ -274,7 +297,31 @@ export async function gantiDosenPengampu(idKelas: number,nidnDosenBaru: string) 
         }
     });
 }
+
 ////////////////////////////////////////// Manajemen Matakuliah //////////////////////////////////////////
+export async function getAllMatakuliah(){
+    return await prisma.matakuliah.findMany({
+       select : {
+        nama_mk : true,
+        kelas : {
+            select : {
+                nama_kelas : true,
+                dosen : {
+                    select : {
+                        pengguna : {
+                            select : {
+                                nama_lengkap : true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+       }
+    });
+}
+
+
 export async function tambahMatakuliah(
     kodeMk: string,
     namaMk: string,
@@ -304,7 +351,7 @@ export async function tambahMatakuliah(
     return data;
 }
 
-export async function editMatakuliah(kodeMk: string,namaMkBaru: string,idKelas: number,namaKelasBaru: string) {
+export async function editMatakuliah(kodeMk: string, namaMkBaru: string, idKelas: number, namaKelasBaru: string) {
     const data = await prisma.matakuliah.update({
         where: {
             kode_mk: kodeMk
@@ -324,6 +371,34 @@ export async function editMatakuliah(kodeMk: string,namaMkBaru: string,idKelas: 
         },
         include: {
             kelas: true
+        }
+    });
+
+    return data;
+}
+
+export async function detailMatakuliah(kode_mk : string){
+    const data = await prisma.matakuliah.findUnique({
+        where : {
+            kode_mk :kode_mk,
+        }, select : {
+            kode_mk : true,
+            nama_mk : true,
+            kelas : {
+                select : {
+                    nama_kelas : true,
+                    nidn : true,
+                    dosen : {
+                        select : {
+                            pengguna : {
+                                select : {
+                                    nama_lengkap : true,
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -351,4 +426,52 @@ export async function getAllAktivitasPengguna() {
     });
 
     return data;
+}
+
+//global
+export async function cekMahasiswa(npm: string, email: string) {
+    const mahasiswa = await prisma.pengguna.findFirst({
+        where: {
+            OR: [
+                { email: email },
+                {
+                    mahasiswa: {
+                        is: { npm: npm }
+                    }
+                }
+            ]
+        }
+    })
+
+    return mahasiswa !== null
+}
+
+export async function cekDosen(nidn : string){
+    const dosen = await prisma.lecturer.findFirst({
+        where : {
+            nidn : nidn
+        }
+    })
+
+    return dosen !== null
+}
+
+export async function getMahasiswa(userUUID: string) {
+    return await prisma.student.findUnique({
+        where: {
+            UUID: userUUID,
+        }, select: {
+            npm: true
+        }
+    })
+}
+
+export async function getDosen(userUUID: string) {
+    return await prisma.lecturer.findUnique({
+        where: {
+            UUID: userUUID,
+        }, select: {
+            nidn: true
+        }
+    })
 }
