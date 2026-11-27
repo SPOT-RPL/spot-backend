@@ -14,7 +14,7 @@
     "prisma:studio": "prisma studio --config ./prisma7.config.ts",
     "test": "bun test",
     "build:win:x64": "bun run prisma:generate && bun build --compile --minify --target=bun-windows-x64 src/server.ts --outfile dist/windows-x64/server.exe",
-    "build:linux": "bun run prisma:generate && bun build --compile --minify --target=bun-linux-x64-baseline src/server.ts --outfile dist/linux/server",
+    "build:linux": "bun run prisma:generate && bun build --compile --minify --target=bun-linux-x64-baseline src/server.ts --outfile dist/linux/server"
   },
   "repository": {
     "type": "git",
@@ -26,14 +26,18 @@
     "@prisma/client": "^7.10.1",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
+    "chalk": "^6.0.1",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "jose": "^6.2.18",
+    "morgan": "^1.12.1",
     "pg": "^8.23.1"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",
+    "@types/chalk": "^2.2.4",
     "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "prisma": "^7.10.1",
