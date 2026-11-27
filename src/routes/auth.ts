@@ -1,17 +1,16 @@
-import express, { type Router, type Request, type Response } from "express";
-import bcrypt from "bcrypt";
+import express, { type Request, type Response } from "express";
 import { getPengguna, changePenggunaPassword } from "../services/pengguna";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../lib/jwt";
 import { protect } from "../middleware/protect";
 import { deleteRefreshToken, findActiveRefreshToken, registerRefreshToken } from "../services/refreshToken";
 
-const router: Router = express.Router();
+const router = express.Router();
 
 router.post("/login", async (req: Request, res: Response) => {
 	const { email, password } = req.body;
 	const user = await getPengguna(email);
 
-	if (!user || !await bcrypt.compare(password, user?.password)) {
+	if (!user || !await Bun.password.verify(password, user?.password)) {
 		return res.status(401).json({
 			message: "Invalid email or password"
 		});
@@ -20,7 +19,7 @@ router.post("/login", async (req: Request, res: Response) => {
 	const accessToken = await generateAccessToken(user.UUID);
 	const refreshToken = await generateRefreshToken(user.UUID);
 
-	if (!registerRefreshToken(refreshToken)) {
+	if (!await registerRefreshToken(refreshToken)) {
 		return res.status(500).json({
 			message: "Failed to store refresh token"
 		});
@@ -30,6 +29,34 @@ router.post("/login", async (req: Request, res: Response) => {
 		accessToken: accessToken,
 		refreshToken: refreshToken
 	});
+})
+
+router.post("/logout", protect, async (req: Request, res: Response) => {
+	const { refreshToken } = req.body;
+
+	try {
+		const payload = await verifyRefreshToken(refreshToken);
+		const userUUID = payload.sub;
+
+		const foundRefreshToken = await findActiveRefreshToken(refreshToken)
+		if (!foundRefreshToken || foundRefreshToken.userUUID !== userUUID) {
+			return res.status(401).json({
+				message: "Invalid or expired refresh token"
+			});
+		}
+
+		if (! await deleteRefreshToken(foundRefreshToken)) {
+			return res.status(500).json({
+				message: "Internal server error"
+			});
+		}
+
+		return res.sendStatus(200);
+	} catch {
+		return res.status(401).json({
+			message: "Invalid refresh token"
+		});
+	}
 })
 
 router.post("/refresh", async (req: Request, res: Response) => {
